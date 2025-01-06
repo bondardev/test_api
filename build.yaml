@@ -1,0 +1,1362 @@
+openapi: 3.0.0
+tags:
+  - name: users
+  - name: positions
+  - name: token
+info:
+  title: Api documentation for frontend test assignment
+  version: 0.0.1
+  contact:
+    name: Admin
+    email: info@abz.agency
+    url: 'https://abz.agency'
+servers:
+  - url: 'https://frontend-test-assignment-api.abz.agency/api/v1'
+    description: Production server
+paths:
+  /token:
+    get:
+      summary: Get a new token
+      description: |-
+        ## Method returns a token that is required to register a new user.
+           - The token is valid for **40 minutes** and can be used for only **one** request.
+           - For the next registration, you will need to get a **new one**.
+      tags:
+        - token
+      responses:
+        '200':
+          description: A JSON object that contains token
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  success: true
+                  token: >-
+                    eyJpdiI6Im9mV1NTMlFZQTlJeWlLQ3liVks1MGc9PSIsInZhbHVlIjoiRTJBbUR4dHp1dWJ3ekQ4bG85WVZya3ZpRGlMQ0g5ZHk4M05UNUY4Rmd3eFM3czc2UDRBR0E4SDR5WXlVTG5DUDdSRTJTMU1KQ2lUQmVZYXZZOHJJUVE9PSIsIm1hYyI6ImE5YmNiODljZjMzMTdmMDc4NjEwN2RjZTVkNzBmMWI0ZDQyN2YzODI5YjQxMzE4MWY0MmY0ZTQ1OGY4NTkyNWQifQ==
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                    description: 'Boolean to detect, was request successfully or not'
+                  token:
+                    type: string
+                    example: >-
+                      eyJpdiI6Im9mV1NTMlFZQTlJeWlLQ3liVks1MGc9PSIsInZhbHVlIjoiRTJBbUR4dHp1dWJ3ekQ4bG85WVZya3ZpRGlMQ0g5ZHk4M0
+                    description: Token for registration
+  /users:
+    post:
+      tags:
+        - users
+      summary: Register new user
+      security:
+        - tokenAuth: []
+      parameters:
+        - name: Token
+          in: header
+          required: true
+          description: Token for registration
+          example: >-
+            eyJpdiI6Im9mV1NTMlFZQTlJeWlLQ3liVks1MGc9PSIsInZhbHVlIjoiRTJBbUR4dHp1dWJ3ekQ4bG85WVZya3ZpRGlMQ0g5ZHk4M
+          schema:
+            type: string
+            example: >-
+              eyJpdiI6Im9mV1NTMlFZQTlJeWlLQ3liVks1MGc9PSIsInZhbHVlIjoiRTJBbUR4dHp1dWJ3ekQ4bG85WVZya3ZpRGlMQ0g5ZHk4M
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Alice
+                  description: Username should contain 2-60 characters.
+                  minLength: 2
+                  maxLength: 60
+                email:
+                  type: string
+                  example: alice.fonk@mail.com
+                  description: 'User email, must be a valid email according to **RFC2822**.'
+                  minLength: 6
+                  maxLength: 100
+                  pattern: >-
+                    ^(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$
+                phone:
+                  type: string
+                  example: 380500740599
+                  description: >-
+                    User phone number. Number should start with code of Ukraine
+                    **+380**.
+                  pattern: '^[\+]{0,1}380([0-9]{9})$'
+                position_id:
+                  type: integer
+                  example: 1
+                  description: >-
+                    User`s position id. You can get list of all positions with
+                    their IDs using the API method **GET api/v1/positions**.
+                  minimum: 1
+                photo:
+                  type: string
+                  format: binary
+                  description: >-
+                    Minimum size of photo **70x70px**. The photo format must be
+                    **jpeg/jpg** type. The photo size must not be greater than
+                    **5 Mb**.
+              required:
+                - name
+                - email
+                - phone
+                - position_id
+                - photo
+      description: |-
+        ## User registration request. <br>
+           All fields are **required**:
+           - name - user name, should be 2-60 characters
+           - email - user email, must be a valid email according to RFC2822
+           - phone - user phone number, should start with code of Ukraine +380
+           - position_id - user position id. You can get list of all positions with their IDs using the API method GET api/v1/positions
+           - photo - user photo should be jpg/jpeg image, with resolution at least 70x70px and size must not exceed 5MB.
+      responses:
+        '201':
+          description: Success response
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  success: true
+                  user_id: 23
+                  message: New user successfully registered
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                    description: 'Boolean to detect, was request successfully or not'
+                  message:
+                    type: string
+                    example: Page not found
+                    description: Error or success message
+                  user_id:
+                    type: integer
+                    example: 21
+                    description: Id of created user
+        '401':
+          description: Expired token response
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  success: false
+                  message: The token expired.
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                    description: 'Boolean to detect, was request successfully or not'
+                  message:
+                    type: string
+                    example: Page not found
+                    description: Error or success message
+        '409':
+          description: Phone or email already exists in database response
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  success: false
+                  message: User with this phone or email already exist
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                    description: 'Boolean to detect, was request successfully or not'
+                  message:
+                    type: string
+                    example: Page not found
+                    description: Error or success message
+        '422':
+          description: Validation error response
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  success: false
+                  message: Validation failed
+                  fails:
+                    name:
+                      - The name must be at least 2 characters.
+                    email:
+                      - The email must be a valid email address.
+                    phone:
+                      - The phone field is required.
+                    position_id:
+                      - The position id must be an integer.
+                    photo:
+                      - The photo may not be greater than 5 Mbytes.
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                    description: 'Boolean to detect, was request successfully or not'
+                  message:
+                    type: string
+                    example: Page not found
+                    description: Error or success message
+                  fails:
+                    type: object
+                    description: Object that describes errors by field
+                    properties:
+                      count:
+                        type: array
+                        items:
+                          example: The count must be an integer.
+                          type: string
+                          description: Description of error occurred with field
+                      page:
+                        type: array
+                        items:
+                          example: The page must be at least 1.
+                          type: string
+                          description: Description of error occurred with field
+    get:
+      parameters:
+        - name: page
+          in: query
+          required: false
+          description: Specify the page that you want to retrieve
+          example: 2
+          schema:
+            type: integer
+            example: 2
+            minimum: 1
+        - name: count
+          in: query
+          required: false
+          description: Specify the amount of items that will be retrieved per page
+          example: 10
+          schema:
+            type: integer
+            example: 10
+            default: 5
+            minimum: 1
+            maximum: 100
+      tags:
+        - users
+      summary: Returns a list of users.
+      description: >-
+        ## Returns users data from a database divided into pages and sorted by
+        ID in the ascending order.
+           - You can specify the parameters such as **count** and **page**, which correspond to the number of users on the page, missing record number and page number.
+           - To navigate through the pages, you can use the links in the server's response: next_link to go to the next page and prev_link to return to the previous page.
+           - If the next or previous page does not exist, the next_link/prev_link parameter will be set to null
+      responses:
+        '200':
+          description: Success response
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  success: true
+                  page: 1
+                  total_pages: 10
+                  total_users: 47
+                  count: 5
+                  links:
+                    next_url: >-
+                      https://frontend-test-assignment-api.abz.agency/api/v1/users?page=2&count=5
+                    prev_url: null
+                  users:
+                    - id: '30'
+                      name: Angel
+                      email: angel.williams@example.com
+                      phone: '+380496540023'
+                      position: Designer
+                      position_id: '4'
+                      registration_timestamp: 1537777441
+                      photo: >-
+                        https://frontend-test-assignment-api.abz.agency/images/users/5b977ba13fb3330.jpeg
+                    - id: '29'
+                      name: Mattie
+                      email: mattie.lee@example.com
+                      phone: '+380204819073'
+                      position: Designer
+                      position_id: '4'
+                      registration_timestamp: 1537691099
+                      photo: >-
+                        https://frontend-test-assignment-api.abz.agency/images/users/5b977ba1245cc29.jpeg
+                    - id: '36'
+                      name: Joshua
+                      email: joshua.dean@example.com
+                      phone: '+380542161925'
+                      position: Designer
+                      position_id: '4'
+                      registration_timestamp: 1537661281
+                      photo: >-
+                        https://frontend-test-assignment-api.abz.agency/images/users/5b977ba1e527036.jpeg
+                    - id: '37'
+                      name: Lisa
+                      email: lisa.medina@example.com
+                      phone: '+380564753087'
+                      position: Security
+                      position_id: '3'
+                      registration_timestamp: 1537639019
+                      photo: >-
+                        https://frontend-test-assignment-api.abz.agency/images/users/5b977ba20bd9537.jpeg
+                    - id: '42'
+                      name: Lorraine
+                      email: lorraine.morris@example.com
+                      phone: '+380945198009'
+                      position: Designer
+                      position_id: '4'
+                      registration_timestamp: 1537629182
+                      photo: >-
+                        https://frontend-test-assignment-api.abz.agency/images/users/5b977ba293d2f42.jpeg
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                    description: 'Boolean to detect, was request successfully or not'
+                  page:
+                    type: integer
+                    example: 1
+                    description: Number of page from query parameters
+                  count:
+                    type: integer
+                    description: Count of users from query parameters
+                    example: 5
+                  total_pages:
+                    type: integer
+                    description: Number of total pages
+                    example: 10
+                  total_users:
+                    type: integer
+                    description: Number of total users
+                    example: 47
+                  links:
+                    type: object
+                    properties:
+                      next_url:
+                        type: string
+                        description: Next page url
+                        example: >-
+                          https://frontend-test-assignment-api.abz.agency/api/v1/users?page=2&count=5
+                      prev_url:
+                        type: string
+                        description: Previous page url
+                        example: null
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: User id from database
+                          example: 2
+                          minimum: 1
+                        name:
+                          type: string
+                          description: User name
+                          example: Maxwell Skiles
+                        email:
+                          type: string
+                          description: User email
+                          example: imelda90@hotmail.com
+                        phone:
+                          type: string
+                          description: User phone
+                          example: '+380677564422'
+                        position_id:
+                          type: integer
+                          description: Position id of user
+                          example: 1
+                        position:
+                          type: string
+                          description: Position name
+                          example: Lawyer
+                        photo:
+                          type: string
+                          description: User photo
+                          example: >-
+                            https://frontend-test-assignment-api.abz.agency/images/users/5e54fc8193f7b1.jpeg
+        '404':
+          description: A JSON object containing errors
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  success: false
+                  message: Page not found
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                    description: 'Boolean to detect, was request successfully or not'
+                  message:
+                    type: string
+                    example: Page not found
+                    description: Error or success message
+        '422':
+          description: A JSON object containing errors
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  success: false
+                  message: Validation failed
+                  fails:
+                    count:
+                      - The count must be an integer.
+                    page:
+                      - The page must be at least 1.
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                    description: 'Boolean to detect, was request successfully or not'
+                  message:
+                    type: string
+                    example: Page not found
+                    description: Error or success message
+                  fails:
+                    type: object
+                    description: Object that describes errors by field
+                    properties:
+                      count:
+                        type: array
+                        items:
+                          example: The count must be an integer.
+                          type: string
+                          description: Description of error occurred with field
+                      page:
+                        type: array
+                        items:
+                          example: The page must be at least 1.
+                          type: string
+                          description: Description of error occurred with field
+  '/users/{id}':
+    get:
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the resource in the database
+          example: 5
+          schema:
+            type: integer
+            minimum: 1
+            example: 5
+      tags:
+        - users
+      summary: Returns a user by id
+      description: >-
+        ## Get user by id. Return information about user by his id. This meathod
+        can be used to obtain a specific user for the site header.
+      responses:
+        '200':
+          description: A JSON object of user
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  success: true
+                  user:
+                    id: 1
+                    name: Superstar
+                    email: Superstar@gmail.com
+                    phone: '+380957398462'
+                    position: Security
+                    position_id: 2
+                    photo: >-
+                      https://frontend-test-assignment-api.abz.agency/images/users/5b9626f0157d224.jpeg
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                    description: 'Boolean to detect, was request successfully or not'
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        description: User id from database
+                        example: 2
+                        minimum: 1
+                      name:
+                        type: string
+                        description: User name
+                        example: Maxwell Skiles
+                      email:
+                        type: string
+                        description: User email
+                        example: imelda90@hotmail.com
+                      phone:
+                        type: string
+                        description: User phone
+                        example: '+380677564422'
+                      position_id:
+                        type: integer
+                        description: Position id of user
+                        example: 1
+                      position:
+                        type: string
+                        description: Position name
+                        example: Lawyer
+                      photo:
+                        type: string
+                        description: User photo
+                        example: >-
+                          https://frontend-test-assignment-api.abz.agency/images/users/5e54fc8193f7b1.jpeg
+        '400':
+          description: A JSON object containing errors
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  success: false
+                  message: The user with the requestedid does not exist
+                  fails:
+                    userId:
+                      - The user must be an integer.
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                    description: 'Boolean to detect, was request successfully or not'
+                  message:
+                    type: string
+                    example: Page not found
+                    description: Error or success message
+                  fails:
+                    type: object
+                    description: Object that describes errors by field
+                    properties:
+                      count:
+                        type: array
+                        items:
+                          example: The count must be an integer.
+                          type: string
+                          description: Description of error occurred with field
+                      page:
+                        type: array
+                        items:
+                          example: The page must be at least 1.
+                          type: string
+                          description: Description of error occurred with field
+        '404':
+          description: A JSON object containing errors
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  success: false
+                  message: User not found
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                    description: 'Boolean to detect, was request successfully or not'
+                  message:
+                    type: string
+                    example: Page not found
+                    description: Error or success message
+  /positions:
+    get:
+      tags:
+        - positions
+      summary: Get users positions
+      description: '## Returns a list of all available users positions.'
+      responses:
+        '200':
+          description: A JSON object of positions
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  success: true
+                  positions:
+                    - id: 1
+                      name: Lawyer
+                    - id: 2
+                      name: Content manager
+                    - id: 3
+                      name: Security
+                    - id: 4
+                      name: Designer
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                    description: 'Boolean to detect, was request successfully or not'
+                  positions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 2
+                          description: Id of position
+                        name:
+                          type: string
+                          example: Security
+                          description: Name of position
+        '404':
+          description: A JSON object containing errors
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  success: false
+                  message: Positions not found
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                    description: 'Boolean to detect, was request successfully or not'
+                  message:
+                    type: string
+                    example: Page not found
+                    description: Error or success message
+        '422':
+          description: A JSON object containing errors
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  success: false
+                  message: Positions not found
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                    description: 'Boolean to detect, was request successfully or not'
+                  message:
+                    type: string
+                    example: Page not found
+                    description: Error or success message
+components:
+  securitySchemes:
+    tokenAuth:
+      type: apiKey
+      in: header
+      name: Token
+  parameters:
+    token:
+      name: Token
+      in: header
+      required: true
+      description: Token for registration
+      example: >-
+        eyJpdiI6Im9mV1NTMlFZQTlJeWlLQ3liVks1MGc9PSIsInZhbHVlIjoiRTJBbUR4dHp1dWJ3ekQ4bG85WVZya3ZpRGlMQ0g5ZHk4M
+      schema:
+        type: string
+        example: >-
+          eyJpdiI6Im9mV1NTMlFZQTlJeWlLQ3liVks1MGc9PSIsInZhbHVlIjoiRTJBbUR4dHp1dWJ3ekQ4bG85WVZya3ZpRGlMQ0g5ZHk4M
+    id:
+      name: id
+      in: path
+      required: true
+      description: The id of the resource in the database
+      example: 5
+      schema:
+        type: integer
+        minimum: 1
+        example: 5
+    page:
+      name: page
+      in: query
+      required: false
+      description: Specify the page that you want to retrieve
+      example: 2
+      schema:
+        type: integer
+        example: 2
+        minimum: 1
+    offset:
+      name: offset
+      in: query
+      required: false
+      description: Specify the missing record number
+      example: 5
+      schema:
+        type: integer
+        example: 2
+        minimum: 0
+    count:
+      name: count
+      in: query
+      required: false
+      description: Specify the amount of items that will be retrieved per page
+      example: 10
+      schema:
+        type: integer
+        example: 10
+        default: 5
+        minimum: 1
+        maximum: 100
+  schemas:
+    fails:
+      type: object
+      description: Object that describes errors by field
+      properties:
+        count:
+          type: array
+          items:
+            example: The count must be an integer.
+            type: string
+            description: Description of error occurred with field
+        page:
+          type: array
+          items:
+            example: The page must be at least 1.
+            type: string
+            description: Description of error occurred with field
+    links:
+      type: object
+      properties:
+        next_url:
+          type: string
+          description: Next page url
+          example: >-
+            https://frontend-test-assignment-api.abz.agency/api/v1/users?page=2&count=5
+        prev_url:
+          type: string
+          description: Previous page url
+          example: null
+    page:
+      type: integer
+      example: 1
+      description: Number of page from query parameters
+    total_pages:
+      type: integer
+      description: Number of total pages
+      example: 10
+    total_users:
+      type: integer
+      description: Number of total users
+      example: 47
+    count:
+      type: integer
+      description: Count of users from query parameters
+      example: 5
+    success:
+      type: boolean
+      example: true
+      description: 'Boolean to detect, was request successfully or not'
+    message:
+      type: string
+      example: Page not found
+      description: Error or success message
+    token:
+      type: string
+      example: >-
+        eyJpdiI6Im9mV1NTMlFZQTlJeWlLQ3liVks1MGc9PSIsInZhbHVlIjoiRTJBbUR4dHp1dWJ3ekQ4bG85WVZya3ZpRGlMQ0g5ZHk4M0
+      description: Token for registration
+    users:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+            description: User id from database
+            example: 2
+            minimum: 1
+          name:
+            type: string
+            description: User name
+            example: Maxwell Skiles
+          email:
+            type: string
+            description: User email
+            example: imelda90@hotmail.com
+          phone:
+            type: string
+            description: User phone
+            example: '+380677564422'
+          position_id:
+            type: integer
+            description: Position id of user
+            example: 1
+          position:
+            type: string
+            description: Position name
+            example: Lawyer
+          photo:
+            type: string
+            description: User photo
+            example: >-
+              https://frontend-test-assignment-api.abz.agency/images/users/5e54fc8193f7b1.jpeg
+    positions:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+            example: 2
+            description: Id of position
+          name:
+            type: string
+            example: Security
+            description: Name of position
+    position:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 2
+          description: Id of position
+        name:
+          type: string
+          example: Security
+          description: Name of position
+    user_id:
+      type: integer
+      example: 21
+      description: Id of created user
+    user:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: User id from database
+          example: 2
+          minimum: 1
+        name:
+          type: string
+          description: User name
+          example: Maxwell Skiles
+        email:
+          type: string
+          description: User email
+          example: imelda90@hotmail.com
+        phone:
+          type: string
+          description: User phone
+          example: '+380677564422'
+        position_id:
+          type: integer
+          description: Position id of user
+          example: 1
+        position:
+          type: string
+          description: Position name
+          example: Lawyer
+        photo:
+          type: string
+          description: User photo
+          example: >-
+            https://frontend-test-assignment-api.abz.agency/images/users/5e54fc8193f7b1.jpeg
+    404usersResponse:
+      type: object
+      example:
+        success: false
+        message: Page not found
+      properties:
+        success:
+          type: boolean
+          example: true
+          description: 'Boolean to detect, was request successfully or not'
+        message:
+          type: string
+          example: Page not found
+          description: Error or success message
+    422usersResponse:
+      type: object
+      example:
+        success: false
+        message: Validation failed
+        fails:
+          count:
+            - The count must be an integer.
+          page:
+            - The page must be at least 1.
+      properties:
+        success:
+          type: boolean
+          example: true
+          description: 'Boolean to detect, was request successfully or not'
+        message:
+          type: string
+          example: Page not found
+          description: Error or success message
+        fails:
+          type: object
+          description: Object that describes errors by field
+          properties:
+            count:
+              type: array
+              items:
+                example: The count must be an integer.
+                type: string
+                description: Description of error occurred with field
+            page:
+              type: array
+              items:
+                example: The page must be at least 1.
+                type: string
+                description: Description of error occurred with field
+    usersResponse:
+      type: object
+      example:
+        success: true
+        page: 1
+        total_pages: 10
+        total_users: 47
+        count: 5
+        links:
+          next_url: >-
+            https://frontend-test-assignment-api.abz.agency/api/v1/users?page=2&count=5
+          prev_url: null
+        users:
+          - id: '30'
+            name: Angel
+            email: angel.williams@example.com
+            phone: '+380496540023'
+            position: Designer
+            position_id: '4'
+            registration_timestamp: 1537777441
+            photo: >-
+              https://frontend-test-assignment-api.abz.agency/images/users/5b977ba13fb3330.jpeg
+          - id: '29'
+            name: Mattie
+            email: mattie.lee@example.com
+            phone: '+380204819073'
+            position: Designer
+            position_id: '4'
+            registration_timestamp: 1537691099
+            photo: >-
+              https://frontend-test-assignment-api.abz.agency/images/users/5b977ba1245cc29.jpeg
+          - id: '36'
+            name: Joshua
+            email: joshua.dean@example.com
+            phone: '+380542161925'
+            position: Designer
+            position_id: '4'
+            registration_timestamp: 1537661281
+            photo: >-
+              https://frontend-test-assignment-api.abz.agency/images/users/5b977ba1e527036.jpeg
+          - id: '37'
+            name: Lisa
+            email: lisa.medina@example.com
+            phone: '+380564753087'
+            position: Security
+            position_id: '3'
+            registration_timestamp: 1537639019
+            photo: >-
+              https://frontend-test-assignment-api.abz.agency/images/users/5b977ba20bd9537.jpeg
+          - id: '42'
+            name: Lorraine
+            email: lorraine.morris@example.com
+            phone: '+380945198009'
+            position: Designer
+            position_id: '4'
+            registration_timestamp: 1537629182
+            photo: >-
+              https://frontend-test-assignment-api.abz.agency/images/users/5b977ba293d2f42.jpeg
+      properties:
+        success:
+          type: boolean
+          example: true
+          description: 'Boolean to detect, was request successfully or not'
+        page:
+          type: integer
+          example: 1
+          description: Number of page from query parameters
+        count:
+          type: integer
+          description: Count of users from query parameters
+          example: 5
+        total_pages:
+          type: integer
+          description: Number of total pages
+          example: 10
+        total_users:
+          type: integer
+          description: Number of total users
+          example: 47
+        links:
+          type: object
+          properties:
+            next_url:
+              type: string
+              description: Next page url
+              example: >-
+                https://frontend-test-assignment-api.abz.agency/api/v1/users?page=2&count=5
+            prev_url:
+              type: string
+              description: Previous page url
+              example: null
+        users:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                description: User id from database
+                example: 2
+                minimum: 1
+              name:
+                type: string
+                description: User name
+                example: Maxwell Skiles
+              email:
+                type: string
+                description: User email
+                example: imelda90@hotmail.com
+              phone:
+                type: string
+                description: User phone
+                example: '+380677564422'
+              position_id:
+                type: integer
+                description: Position id of user
+                example: 1
+              position:
+                type: string
+                description: Position name
+                example: Lawyer
+              photo:
+                type: string
+                description: User photo
+                example: >-
+                  https://frontend-test-assignment-api.abz.agency/images/users/5e54fc8193f7b1.jpeg
+    userResponse:
+      type: object
+      example:
+        success: true
+        user:
+          id: 1
+          name: Superstar
+          email: Superstar@gmail.com
+          phone: '+380957398462'
+          position: Security
+          position_id: 2
+          photo: >-
+            https://frontend-test-assignment-api.abz.agency/images/users/5b9626f0157d224.jpeg
+      properties:
+        success:
+          type: boolean
+          example: true
+          description: 'Boolean to detect, was request successfully or not'
+        user:
+          type: object
+          properties:
+            id:
+              type: integer
+              description: User id from database
+              example: 2
+              minimum: 1
+            name:
+              type: string
+              description: User name
+              example: Maxwell Skiles
+            email:
+              type: string
+              description: User email
+              example: imelda90@hotmail.com
+            phone:
+              type: string
+              description: User phone
+              example: '+380677564422'
+            position_id:
+              type: integer
+              description: Position id of user
+              example: 1
+            position:
+              type: string
+              description: Position name
+              example: Lawyer
+            photo:
+              type: string
+              description: User photo
+              example: >-
+                https://frontend-test-assignment-api.abz.agency/images/users/5e54fc8193f7b1.jpeg
+    400userResponse:
+      type: object
+      example:
+        success: false
+        message: The user with the requestedid does not exist
+        fails:
+          userId:
+            - The user must be an integer.
+      properties:
+        success:
+          type: boolean
+          example: true
+          description: 'Boolean to detect, was request successfully or not'
+        message:
+          type: string
+          example: Page not found
+          description: Error or success message
+        fails:
+          type: object
+          description: Object that describes errors by field
+          properties:
+            count:
+              type: array
+              items:
+                example: The count must be an integer.
+                type: string
+                description: Description of error occurred with field
+            page:
+              type: array
+              items:
+                example: The page must be at least 1.
+                type: string
+                description: Description of error occurred with field
+    404userResponse:
+      type: object
+      example:
+        success: false
+        message: User not found
+      properties:
+        success:
+          type: boolean
+          example: true
+          description: 'Boolean to detect, was request successfully or not'
+        message:
+          type: string
+          example: Page not found
+          description: Error or success message
+    422positionsResponse:
+      type: object
+      example:
+        success: false
+        message: Positions not found
+      properties:
+        success:
+          type: boolean
+          example: true
+          description: 'Boolean to detect, was request successfully or not'
+        message:
+          type: string
+          example: Page not found
+          description: Error or success message
+    positionsResponse:
+      type: object
+      example:
+        success: true
+        positions:
+          - id: 1
+            name: Lawyer
+          - id: 2
+            name: Content manager
+          - id: 3
+            name: Security
+          - id: 4
+            name: Designer
+      properties:
+        success:
+          type: boolean
+          example: true
+          description: 'Boolean to detect, was request successfully or not'
+        positions:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 2
+                description: Id of position
+              name:
+                type: string
+                example: Security
+                description: Name of position
+    tokenResponse:
+      type: object
+      example:
+        success: true
+        token: >-
+          eyJpdiI6Im9mV1NTMlFZQTlJeWlLQ3liVks1MGc9PSIsInZhbHVlIjoiRTJBbUR4dHp1dWJ3ekQ4bG85WVZya3ZpRGlMQ0g5ZHk4M05UNUY4Rmd3eFM3czc2UDRBR0E4SDR5WXlVTG5DUDdSRTJTMU1KQ2lUQmVZYXZZOHJJUVE9PSIsIm1hYyI6ImE5YmNiODljZjMzMTdmMDc4NjEwN2RjZTVkNzBmMWI0ZDQyN2YzODI5YjQxMzE4MWY0MmY0ZTQ1OGY4NTkyNWQifQ==
+      properties:
+        success:
+          type: boolean
+          example: true
+          description: 'Boolean to detect, was request successfully or not'
+        token:
+          type: string
+          example: >-
+            eyJpdiI6Im9mV1NTMlFZQTlJeWlLQ3liVks1MGc9PSIsInZhbHVlIjoiRTJBbUR4dHp1dWJ3ekQ4bG85WVZya3ZpRGlMQ0g5ZHk4M0
+          description: Token for registration
+    userPostResponse:
+      type: object
+      example:
+        success: true
+        user_id: 23
+        message: New user successfully registered
+      properties:
+        success:
+          type: boolean
+          example: true
+          description: 'Boolean to detect, was request successfully or not'
+        message:
+          type: string
+          example: Page not found
+          description: Error or success message
+        user_id:
+          type: integer
+          example: 21
+          description: Id of created user
+    401userPostResponse:
+      type: object
+      example:
+        success: false
+        message: The token expired.
+      properties:
+        success:
+          type: boolean
+          example: true
+          description: 'Boolean to detect, was request successfully or not'
+        message:
+          type: string
+          example: Page not found
+          description: Error or success message
+    409userPostResponse:
+      type: object
+      example:
+        success: false
+        message: User with this phone or email already exist
+      properties:
+        success:
+          type: boolean
+          example: true
+          description: 'Boolean to detect, was request successfully or not'
+        message:
+          type: string
+          example: Page not found
+          description: Error or success message
+    422userPostResponse:
+      type: object
+      example:
+        success: false
+        message: Validation failed
+        fails:
+          name:
+            - The name must be at least 2 characters.
+          email:
+            - The email must be a valid email address.
+          phone:
+            - The phone field is required.
+          position_id:
+            - The position id must be an integer.
+          photo:
+            - The photo may not be greater than 5 Mbytes.
+      properties:
+        success:
+          type: boolean
+          example: true
+          description: 'Boolean to detect, was request successfully or not'
+        message:
+          type: string
+          example: Page not found
+          description: Error or success message
+        fails:
+          type: object
+          description: Object that describes errors by field
+          properties:
+            count:
+              type: array
+              items:
+                example: The count must be an integer.
+                type: string
+                description: Description of error occurred with field
+            page:
+              type: array
+              items:
+                example: The page must be at least 1.
+                type: string
+                description: Description of error occurred with field
+    name:
+      type: string
+      example: Alice
+      description: Username should contain 2-60 characters.
+      minLength: 2
+      maxLength: 60
+    email:
+      type: string
+      example: alice.fonk@mail.com
+      description: 'User email, must be a valid email according to **RFC2822**.'
+      minLength: 6
+      maxLength: 100
+      pattern: >-
+        ^(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$
+    phone:
+      type: string
+      example: 380500740599
+      description: User phone number. Number should start with code of Ukraine **+380**.
+      pattern: '^[\+]{0,1}380([0-9]{9})$'
+    postPosition:
+      type: integer
+      example: 1
+      description: >-
+        User`s position id. You can get list of all positions with their IDs
+        using the API method **GET api/v1/positions**.
+      minimum: 1
+    photo:
+      type: string
+      format: binary
+      description: >-
+        Minimum size of photo **70x70px**. The photo format must be **jpeg/jpg**
+        type. The photo size must not be greater than **5 Mb**.
+    RegistrationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Alice
+          description: Username should contain 2-60 characters.
+          minLength: 2
+          maxLength: 60
+        email:
+          type: string
+          example: alice.fonk@mail.com
+          description: 'User email, must be a valid email according to **RFC2822**.'
+          minLength: 6
+          maxLength: 100
+          pattern: >-
+            ^(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$
+        phone:
+          type: string
+          example: 380500740599
+          description: >-
+            User phone number. Number should start with code of Ukraine
+            **+380**.
+          pattern: '^[\+]{0,1}380([0-9]{9})$'
+        position_id:
+          type: integer
+          example: 1
+          description: >-
+            User`s position id. You can get list of all positions with their IDs
+            using the API method **GET api/v1/positions**.
+          minimum: 1
+        photo:
+          type: string
+          format: binary
+          description: >-
+            Minimum size of photo **70x70px**. The photo format must be
+            **jpeg/jpg** type. The photo size must not be greater than **5 Mb**.
+      required:
+        - name
+        - email
+        - phone
+        - position_id
+        - photo
+
