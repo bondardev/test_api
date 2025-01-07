@@ -107,6 +107,13 @@ class UserController extends Controller
             ], 401);
         }
 
+        if (User::where('email', $request->email)->exists() || User::where('phone', $request->phone)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User with this phone or email already exists.',
+            ], 409);
+        }
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|min:2|max:60',
             'email' => 'required|email|max:100|unique:users',
@@ -123,12 +130,6 @@ class UserController extends Controller
             ], 422);
         }
 
-        if (User::where('email', $request->email)->exists() || User::where('phone', $request->phone)->exists()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User with this phone or email already exists.',
-            ], 409);
-        }
 
         $optimizedPhotoUrl = $imageService->process($request->file('photo'), 'photos');
 

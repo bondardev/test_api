@@ -10,11 +10,11 @@ class UserFactory extends Factory
     public function definition()
     {
         return [
-            'name' => $this->faker->name, // Имя пользователя
-            'email' => $this->faker->unique()->safeEmail, // Email
-            'phone' => '+380' . $this->faker->unique()->randomNumber(9, true), // Телефон
-            'position_id' => Position::inRandomOrder()->first()->id, // Случайная связанная позиция
-            'photo' => $this->faker->imageUrl(300, 300, 'people', true, 'User'), // Ссылка на внешнее изображение
+            'name' => $this->faker->name, 
+            'email' => $this->faker->unique()->safeEmail, 
+            'phone' => '+380' . $this->faker->unique()->randomNumber(9, true), 
+            'position_id' => Position::inRandomOrder()->first()->id,
+            'photo' => $this->faker->imageUrl(300, 300, 'people', true, 'User'),
         ];
     }
 }
