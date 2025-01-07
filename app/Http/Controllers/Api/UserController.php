@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Services\ImageProcessingService;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
@@ -24,13 +26,22 @@ class UserController extends Controller
                 'success' => false,
                 'message' => 'Invalid parameters',
                 'fails' => $validator->errors(),
-            ], 400);
+            ], 422);
         }
-
 
         $count = $request->input('count', 5);
 
         $users = User::query()
+            ->select([
+                'id',
+                'name',
+                'email',
+                'phone',
+                'position_id',
+                DB::raw('UNIX_TIMESTAMP(created_at) as registration_timestamp'),
+                'photo',
+            ])
+            ->with('position:id,name') 
             ->orderBy('id', 'asc')
             ->paginate($count);
 
@@ -40,6 +51,19 @@ class UserController extends Controller
                 'message' => 'No users found.',
             ], 404);
         }
+
+        $formattedUsers = $users->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'position' => $user->position->name ?? null, 
+                'position_id' => $user->position_id,
+                'registration_timestamp' => $user->registration_timestamp,
+                'photo' => $user->photo,
+            ];
+        });
 
         return response()->json([
             'success' => true,
@@ -51,7 +75,7 @@ class UserController extends Controller
                 'next_url' => $users->nextPageUrl(),
                 'prev_url' => $users->previousPageUrl(),
             ],
-            'users' => $users->items(),
+            'users' => $formattedUsers,
         ], 200);
     }
 
